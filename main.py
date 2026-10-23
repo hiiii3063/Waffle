@@ -2,6 +2,7 @@
 import streamlit as st
 import time
 import random
+from textwrap import dedent
 
 st.set_page_config(
     page_title="따끈따끈 와플 주방",
@@ -78,180 +79,273 @@ div.stButton > button:hover {
     font-size: .9rem;
 }
 
-/* 와플 기계 */
+/* 와플 기계 전체 */
 .machine {
     position: relative;
     width: 100%;
-    max-width: 420px;
-    height: 300px;
-    margin: 15px auto 20px;
+    max-width: 430px;
+    height: 385px;
+    margin: 8px auto 28px;
 }
+
+/* 열린 윗뚜껑 */
+.lid {
+    position: absolute;
+    top: 5px;
+    left: 18%;
+    width: 64%;
+    height: 160px;
+    border-radius: 50%;
+    background: #292929;
+    border: 8px solid #222;
+    box-shadow: inset 0 0 0 12px #484848;
+    transform: rotate(-2deg);
+    z-index: 1;
+}
+.lid-inner {
+    position: absolute;
+    inset: 20px;
+    border-radius: 50%;
+    background: #383838;
+    border: 5px solid #555;
+}
+.lid-grid {
+    position: absolute;
+    inset: 28px;
+    border-radius: 45%;
+    background:
+        repeating-linear-gradient(
+            0deg, transparent 0 25px,
+            #252525 26px 35px
+        ),
+        repeating-linear-gradient(
+            90deg, transparent 0 25px,
+            #252525 26px 35px
+        );
+    border: 4px solid #505050;
+}
+.lid-handle {
+    position: absolute;
+    top: -38px;
+    left: 35%;
+    width: 30%;
+    height: 45px;
+    border: 11px solid #292929;
+    border-bottom: 0;
+    border-radius: 40px 40px 0 0;
+}
+
+/* 경첩 */
+.hinge {
+    position: absolute;
+    top: 150px;
+    left: 32%;
+    width: 36%;
+    height: 25px;
+    z-index: 4;
+    display: flex;
+    justify-content: space-between;
+}
+.hinge span {
+    display: block;
+    width: 20px;
+    height: 40px;
+    background: #282828;
+    border-radius: 12px;
+}
+
+/* 아래쪽 기계 본체 */
 .machine-base {
     position: absolute;
-    left: 7%;
-    bottom: 10px;
-    width: 86%;
-    height: 105px;
-    border-radius: 24px 24px 35px 35px;
-    background: linear-gradient(145deg, #b96e39, #784020 65%, #542b19);
-    border: 5px solid #63371f;
-    box-shadow: 0 9px 0 #4c2a19, 0 14px 18px #7b4a2b55;
+    left: 8%;
+    top: 195px;
+    width: 84%;
+    height: 150px;
+    border-radius: 50%;
+    background: #282828;
+    border: 8px solid #3d3d3d;
+    box-shadow: 0 12px 0 #242424, 0 17px 20px #70432655;
+    z-index: 2;
 }
-.machine-top {
+
+/* 원형 와플 틀 */
+.pan {
     position: absolute;
-    left: 10%;
-    top: 20px;
-    width: 80%;
-    height: 125px;
-    border-radius: 28px 28px 22px 22px;
-    background: linear-gradient(145deg, #d79a61, #94532e 70%, #60351f);
-    border: 5px solid #63371f;
-    transform-origin: 50% 100%;
-    box-shadow: inset 0 4px 5px #f8d4a255;
+    left: 12%;
+    top: 202px;
+    width: 76%;
+    height: 130px;
+    border-radius: 50%;
+    background: #090909;
+    border: 5px solid #111;
+    box-shadow: inset 0 0 0 5px #484848;
+    z-index: 3;
 }
-.machine-top:before {
-    content: "";
+
+/* 와플 모양 */
+.waffle {
     position: absolute;
-    left: 20%;
-    top: 13px;
-    width: 60%;
-    height: 12px;
-    border-radius: 10px;
-    background: #f0c18a;
-    opacity: .8;
+    left: 8%;
+    top: 8%;
+    width: 84%;
+    height: 84%;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 3px solid #e59a50;
+    box-shadow: inset 0 0 0 3px #f3c478;
+    background-color: #eab760;
+    background-image:
+        repeating-linear-gradient(
+            0deg, transparent 0 20px,
+            #a45b2b 21px 28px
+        ),
+        repeating-linear-gradient(
+            90deg, transparent 0 20px,
+            #a45b2b 21px 28px
+        ),
+        linear-gradient(135deg, #ffdc91, #d99342);
+    z-index: 5;
 }
-.machine-handle {
+
+/* 덜 익은 와플 */
+.waffle-raw {
+    background-color: #f6dfa6;
+    border-color: #e8cb8e;
+    background-image:
+        repeating-linear-gradient(
+            0deg, transparent 0 20px,
+            #d7bd82 21px 28px
+        ),
+        repeating-linear-gradient(
+            90deg, transparent 0 20px,
+            #d7bd82 21px 28px
+        ),
+        linear-gradient(135deg, #fff0c5, #ead29a);
+}
+
+/* 적당히 익은 와플 */
+.waffle-golden {
+    background-color: #e6a34d;
+    border-color: #f1bf69;
+    background-image:
+        repeating-linear-gradient(
+            0deg, transparent 0 20px,
+            #99471f 21px 28px
+        ),
+        repeating-linear-gradient(
+            90deg, transparent 0 20px,
+            #99471f 21px 28px
+        ),
+        linear-gradient(135deg, #ffdc88, #d48634 75%, #b86426);
+}
+
+/* 탄 와플 */
+.waffle-burnt {
+    background-color: #56301e;
+    border-color: #704128;
+    background-image:
+        repeating-linear-gradient(
+            0deg, transparent 0 20px,
+            #2d170f 21px 28px
+        ),
+        repeating-linear-gradient(
+            90deg, transparent 0 20px,
+            #2d170f 21px 28px
+        ),
+        linear-gradient(135deg, #80502f, #3c2116 70%, #24140e);
+}
+
+/* 손잡이와 조작부 */
+.handle {
     position: absolute;
-    right: 13%;
-    top: 70px;
-    width: 15%;
-    height: 18px;
-    border-radius: 10px;
-    background: linear-gradient(#e2b17b, #7a4528);
-    border: 3px solid #60351f;
-    z-index: 4;
+    top: 180px;
+    right: 8%;
+    width: 65px;
+    height: 17px;
+    background: linear-gradient(#d7a16d, #714126);
+    border: 3px solid #4d2a19;
+    border-radius: 12px;
+    z-index: 6;
 }
-.machine-foot {
+.dial {
     position: absolute;
-    bottom: 0;
-    width: 18%;
-    height: 18px;
-    background: #63371f;
-    border-radius: 0 0 10px 10px;
+    left: 17%;
+    top: 295px;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 4px solid #452819;
+    background: #f1d5a7;
+    z-index: 7;
 }
-.machine-foot.left { left: 16%; }
-.machine-foot.right { right: 16%; }
-.machine-light {
+.light {
     position: absolute;
     right: 20%;
-    bottom: 43px;
+    top: 305px;
     width: 13px;
     height: 13px;
     border-radius: 50%;
-    background: #77b866;
-    border: 3px solid #e8c49c;
-    box-shadow: 0 0 8px #8fda79;
+    background: #8bd47b;
+    border: 2px solid #e5c49a;
+    box-shadow: 0 0 8px #9cde83;
+    z-index: 7;
 }
-.machine-dial {
+.feet {
     position: absolute;
-    left: 17%;
-    bottom: 35px;
-    width: 35px;
-    height: 35px;
-    border-radius: 50%;
-    background: radial-gradient(circle, #f2d8b0 0 40%, #704126 43% 100%);
-    border: 3px solid #482719;
+    left: 18%;
+    top: 333px;
+    width: 18%;
+    height: 18px;
+    background: #392116;
+    border-radius: 0 0 12px 12px;
+    z-index: 1;
 }
-.waffle {
+.feet.right {
+    left: auto;
+    right: 18%;
+}
+.caption {
     position: absolute;
-    left: 20%;
-    top: 85px;
-    width: 60%;
-    aspect-ratio: 1.25;
-    border-radius: 13px;
-    border: 5px solid #9b572b;
-    background-color: #e9b85f;
-    background-image:
-        repeating-linear-gradient(0deg,
-            transparent 0 17px, #8f5128 18px 22px),
-        repeating-linear-gradient(90deg,
-            transparent 0 17px, #8f5128 18px 22px),
-        linear-gradient(135deg, #f6d58c, #d99b48);
-    box-shadow: inset 0 0 8px #6d3b20aa, 0 4px 5px #49281755;
-    z-index: 3;
+    top: 360px;
+    width: 100%;
+    text-align: center;
+    color: #704326;
+    font-family: 'Jua', sans-serif;
+    font-size: 1.05rem;
 }
-.waffle-light {
-    background-color: #f5d98e;
-    background-image:
-        repeating-linear-gradient(0deg,
-            transparent 0 17px, #c99b51 18px 22px),
-        repeating-linear-gradient(90deg,
-            transparent 0 17px, #c99b51 18px 22px),
-        linear-gradient(135deg, #fff0ba, #e9c56f);
-}
-.waffle-golden {
-    background-color: #c88436;
-    background-image:
-        repeating-linear-gradient(0deg,
-            transparent 0 17px, #88441e 18px 22px),
-        repeating-linear-gradient(90deg,
-            transparent 0 17px, #88441e 18px 22px),
-        linear-gradient(135deg, #f6cf78, #c77b32 75%, #a45b25);
-}
-.waffle-burnt {
-    background-color: #54301e;
-    background-image:
-        repeating-linear-gradient(0deg,
-            transparent 0 17px, #32190f 18px 22px),
-        repeating-linear-gradient(90deg,
-            transparent 0 17px, #32190f 18px 22px),
-        linear-gradient(135deg, #8a5430, #4b2819 75%, #28160f);
-}
-.waffle-raw {
-    background-color: #f4dca5;
-    background-image:
-        repeating-linear-gradient(0deg,
-            transparent 0 17px, #d2b982 18px 22px),
-        repeating-linear-gradient(90deg,
-            transparent 0 17px, #d2b982 18px 22px),
-        linear-gradient(135deg, #fff0c5, #e9d49f);
-}
-.flip-animation {
-    animation: waffleFlip .85s ease-in-out;
-}
-@keyframes waffleFlip {
-    0% { transform: rotateX(0deg) rotateZ(0deg) scale(1); }
-    45% { transform: rotateX(180deg) rotateZ(8deg) scale(.85); }
-    100% { transform: rotateX(360deg) rotateZ(0deg) scale(1); }
-}
+
+/* 반죽 흐름 */
 .pour-beam {
     position: absolute;
-    z-index: 5;
-    left: 48%;
-    top: 0;
+    top: 160px;
+    left: 49%;
     width: 10px;
-    height: 100px;
+    height: 75px;
+    background: linear-gradient(90deg, #d9a05b, #ffe0a0, #d9a05b);
     border-radius: 8px;
-    background: linear-gradient(90deg, #d7a15e, #ffe2a3, #d7a15e);
+    z-index: 8;
     animation: pourPulse .35s infinite alternate;
 }
 @keyframes pourPulse {
-    from { opacity: .65; }
+    from { opacity: .55; }
     to { opacity: 1; }
 }
-.machine-caption {
-    position: absolute;
-    bottom: -20px;
-    width: 100%;
-    text-align: center;
-    color: #714426;
-    font-family: 'Jua', sans-serif;
+
+/* 뒤집는 순간 */
+.flip-animation {
+    animation: flipWaffle .9s ease-in-out;
+}
+@keyframes flipWaffle {
+    0% { transform: rotateX(0deg) rotateZ(0deg) scale(1); }
+    35% { transform: rotateX(180deg) rotateZ(8deg) scale(.78); }
+    70% { transform: rotateX(300deg) rotateZ(-5deg) scale(.9); }
+    100% { transform: rotateX(360deg) rotateZ(0deg) scale(1); }
 }
 </style>
 """, unsafe_allow_html=True)
 
 
-# ==================== 상태 초기화 ====================
+# ==================== 게임 상태 ====================
 def init_game():
     best = st.session_state.get("best_score", 0)
     st.session_state.round_no = 1
@@ -262,12 +356,11 @@ def init_game():
     st.session_state.phase = "pour_ready"
     st.session_state.batter = 50
     st.session_state.pour_start = None
-    st.session_state.pour_duration = random.uniform(3.5, 5.0)
+    st.session_state.pour_duration = random.uniform(4.0, 6.0)
     st.session_state.bake_start = None
-    st.session_state.bake_duration = random.uniform(6.0, 8.0)
+    st.session_state.bake_duration = random.uniform(7.0, 9.0)
     st.session_state.results = []
     st.session_state.message = ""
-    st.session_state.flip_progress = 65
     st.session_state.pending_points = 0
 
 
@@ -275,26 +368,35 @@ if "round_no" not in st.session_state:
     init_game()
 
 
-# ==================== 와플 기계 그리기 ====================
-def draw_machine(waffle_class="waffle-golden",
+# ==================== 기계 그리기 ====================
+def draw_machine(waffle_class="waffle-raw",
                  pouring=False, flipping=False, caption=""):
     beam = '<div class="pour-beam"></div>' if pouring else ""
     flip_class = "flip-animation" if flipping else ""
 
-    st.markdown(f"""
-    <div class="machine">
-        <div class="machine-top"></div>
-        <div class="machine-handle"></div>
-        <div class="machine-base"></div>
-        <div class="machine-foot left"></div>
-        <div class="machine-foot right"></div>
-        <div class="machine-dial"></div>
-        <div class="machine-light"></div>
-        {beam}
-        <div class="waffle {waffle_class} {flip_class}"></div>
-        <div class="machine-caption">{caption}</div>
-    </div>
-    """, unsafe_allow_html=True)
+    html = f"""
+<div class="machine">
+  <div class="lid">
+    <div class="lid-handle"></div>
+    <div class="lid-inner"></div>
+    <div class="lid-grid"></div>
+  </div>
+  <div class="hinge"><span></span><span></span></div>
+  <div class="machine-base"></div>
+  <div class="pan">
+    <div class="waffle {waffle_class} {flip_class}"></div>
+  </div>
+  <div class="handle"></div>
+  <div class="dial"></div>
+  <div class="light"></div>
+  <div class="feet"></div>
+  <div class="feet right"></div>
+  {beam}
+  <div class="caption">{caption}</div>
+</div>
+"""
+    # HTML 앞뒤의 공백을 제거해 코드 블록으로 표시되는 문제 방지
+    st.markdown(dedent(html).strip(), unsafe_allow_html=True)
 
 
 def end_game(success, message):
@@ -307,10 +409,7 @@ def end_game(success, message):
     )
 
 
-# ==================== 와플 뒤집기 판정 ====================
 def finish_waffle(progress):
-    st.session_state.flip_progress = progress
-
     if progress < 55:
         st.session_state.results.append(
             f"❌ {st.session_state.round_no}번째 와플: "
@@ -324,14 +423,13 @@ def finish_waffle(progress):
             f"❌ {st.session_state.round_no}번째 와플: "
             f"너무 늦게 뒤집음 ({progress}%)"
         )
-        end_game(False, "와플이 너무 익어 버렸어요!")
+        end_game(False, "와플이 타기 시작했어요!")
         return
 
     batter = st.session_state.batter
-    base_points = 100
     batter_bonus = max(0, 30 - abs(batter - 50) * 2)
     timing_bonus = max(0, 30 - int(abs(progress - 65) * 2))
-    points = base_points + batter_bonus + timing_bonus
+    points = 100 + batter_bonus + timing_bonus
 
     st.session_state.score += points
     st.session_state.pending_points = points
@@ -344,16 +442,15 @@ def finish_waffle(progress):
         st.session_state.score
     )
 
-    # 성공하면 뒤집기 애니메이션 화면으로 이동
     st.session_state.phase = "flip_result"
 
 
 # ==================== 제목 ====================
 st.markdown("""
 <div class="hero">
-    <div style="font-size:3rem;">🧇 ☕ 🥣</div>
-    <h1>따끈따끈 와플 주방</h1>
-    <div>반죽을 붓고, 완벽한 타이밍에 뒤집어 보세요!</div>
+  <div style="font-size:3rem;">🧇 ☕ 🥣</div>
+  <h1>따끈따끈 와플 주방</h1>
+  <div>반죽을 붓고, 완벽한 타이밍에 뒤집어 보세요!</div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -382,16 +479,18 @@ with c3:
 
 with st.expander("📖 게임 방법"):
     st.markdown("""
-    - 반죽 게이지가 움직일 때 **멈추기**를 눌러 양을 결정해요.
-    - 반죽 양은 40~60% 사이여야 성공이에요.
-    - 굽기 게이지가 55~75%일 때 뒤집어야 해요.
-    - 한 번이라도 실패하면 즉시 게임이 끝나요.
-    - 5개의 와플을 모두 완성하면 우승이에요.
-    - 반죽 양과 뒤집기 타이밍이 50%, 65%에 가까울수록 보너스가 높아요.
+    1. 반죽 게이지가 움직이면 멈추기 버튼을 눌러요.
+    2. 반죽 양이 40~60%이면 성공 범위예요.
+    3. 와플이 익기 시작하면 굽기 게이지를 확인해요.
+    4. 굽기 게이지 55~75% 사이에서 뒤집어야 성공이에요.
+    5. 한 번이라도 실패하면 즉시 게임이 종료돼요.
+    6. 5개를 모두 완성하면 최종 결과를 확인할 수 있어요.
+
+    반죽 양과 타이밍이 각각 50%, 65%에 가까울수록 보너스 점수가 높아요.
     """)
 
 
-# ==================== 최종 결과 ====================
+# ==================== 결과 화면 ====================
 if st.session_state.game_over:
     st.markdown("---")
     st.markdown("## 🍽️ 오늘의 주방 결과")
@@ -423,10 +522,10 @@ if st.session_state.game_over:
         st.rerun()
 
 
-# ==================== 반죽 붓기 준비 ====================
+# ==================== 반죽 준비 ====================
 elif st.session_state.phase == "pour_ready":
     st.markdown(f"## 🥣 {st.session_state.round_no}번째 와플")
-    st.info("반죽을 부을 준비가 되었으면 시작 버튼을 눌러 주세요.")
+    st.info("열린 와플 기계에 반죽을 부을 준비를 해 주세요.")
 
     draw_machine(
         waffle_class="waffle-raw",
@@ -447,10 +546,15 @@ elif st.session_state.phase == "pouring":
         if st.session_state.phase != "pouring":
             return
 
-        st.markdown(f"## 🥣 {st.session_state.round_no}번째 와플: 반죽 붓기")
+        st.markdown(
+            f"## 🥣 {st.session_state.round_no}번째 와플: 반죽 붓기"
+        )
+
         elapsed = time.time() - st.session_state.pour_start
-        duration = st.session_state.pour_duration
-        amount = min(100, int(elapsed / duration * 100))
+        amount = min(
+            100,
+            int(elapsed / st.session_state.pour_duration * 100)
+        )
 
         draw_machine(
             waffle_class="waffle-raw",
@@ -459,10 +563,7 @@ elif st.session_state.phase == "pouring":
         )
 
         st.markdown(
-            f"""
-            <div style="text-align:center;font-family:Jua;color:#714426;
-                        font-size:1.4rem;">반죽 양: {amount}%</div>
-            """,
+            f'<h3 style="text-align:center;">반죽 양: {amount}%</h3>',
             unsafe_allow_html=True
         )
         st.progress(amount / 100)
@@ -470,9 +571,9 @@ elif st.session_state.phase == "pouring":
         if amount < 40:
             st.warning("아직 반죽이 부족해요.")
         elif amount <= 60:
-            st.success("적절한 양이에요! 지금 멈추면 성공할 수 있어요.")
+            st.success("적당한 양이에요! 지금 멈춰 보세요.")
         else:
-            st.warning("반죽이 너무 많아지고 있어요!")
+            st.warning("반죽이 넘치기 시작해요!")
 
         if st.button(
             "✋ 반죽 붓기 멈추기!",
@@ -494,7 +595,7 @@ elif st.session_state.phase == "pouring":
             else:
                 st.session_state.phase = "bake"
                 st.session_state.bake_start = time.time()
-                st.session_state.bake_duration = random.uniform(6.0, 8.0)
+                st.session_state.bake_duration = random.uniform(7.0, 9.0)
 
             st.rerun()
 
@@ -517,11 +618,15 @@ elif st.session_state.phase == "bake":
         if st.session_state.phase != "bake":
             return
 
-        st.markdown(f"## 🔥 {st.session_state.round_no}번째 와플: 굽기")
+        st.markdown(
+            f"## 🔥 {st.session_state.round_no}번째 와플: 굽기"
+        )
 
         elapsed = time.time() - st.session_state.bake_start
-        duration = st.session_state.bake_duration
-        progress = min(100, int(elapsed / duration * 100))
+        progress = min(
+            100,
+            int(elapsed / st.session_state.bake_duration * 100)
+        )
 
         if progress < 40:
             waffle_class = "waffle-raw"
@@ -547,18 +652,13 @@ elif st.session_state.phase == "bake":
 
         st.markdown(
             f"""
-            <div style="height:30px;background:#ead4b4;border:2px solid #87512f;
-                        border-radius:14px;overflow:hidden;">
-                <div style="height:100%;width:{progress}%;background:{color};
-                            transition:width .15s linear;"></div>
+            <div style="height:30px;background:#ead4b4;border:2px solid #87512f;border-radius:14px;overflow:hidden;">
+                <div style="height:100%;width:{progress}%;background:{color};transition:width .15s linear;"></div>
             </div>
-            <div style="display:flex;justify-content:space-between;
-                        font-size:.8rem;color:#714426;margin-top:5px;">
+            <div style="display:flex;justify-content:space-between;font-size:.8rem;color:#714426;margin-top:5px;">
                 <span>덜 익음</span><span>적당히 익음</span><span>탐</span>
             </div>
-            <h3 style="text-align:center;color:{color};">
-                {status} · {progress}%
-            </h3>
+            <h3 style="text-align:center;color:{color};">{status} · {progress}%</h3>
             """,
             unsafe_allow_html=True
         )
@@ -583,7 +683,7 @@ elif st.session_state.phase == "bake":
     baking_area()
 
 
-# ==================== 뒤집기 애니메이션 ====================
+# ==================== 뒤집기 결과 ====================
 elif st.session_state.phase == "flip_result":
     st.markdown("## 🧇 와플 뒤집기!")
 
@@ -600,7 +700,7 @@ elif st.session_state.phase == "flip_result":
         f"현재 점수: **{st.session_state.score}점**"
     )
 
-    if st.session_state.round_no >= 5:
+    if st.session_state.round_no == 5:
         if st.button("🏆 최종 결과 보기", use_container_width=True):
             end_game(True, "5개의 와플을 모두 완성했어요!")
             st.rerun()
@@ -613,7 +713,6 @@ elif st.session_state.phase == "flip_result":
             st.rerun()
 
 
-# ==================== 하단 ====================
 st.markdown("---")
 st.markdown(
     '<p class="note">따뜻한 주방에서 만드는 나만의 와플 🍓 🧈 🍯</p>',
