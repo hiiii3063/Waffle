@@ -3,7 +3,6 @@ import streamlit as st
 import streamlit.components.v1 as components
 import time
 import random
-import json
 from textwrap import dedent
 
 st.set_page_config(
@@ -12,7 +11,7 @@ st.set_page_config(
     layout="centered"
 )
 
-# ==================== 디자인 ====================
+# ==================== 스타일 ====================
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum&display=swap');
@@ -102,11 +101,19 @@ if "round_no" not in st.session_state:
 
 
 # ==================== 와플 기계 ====================
-def draw_machine(waffle_class="raw", pouring=False, caption=""):
+def draw_machine(waffle_class="golden", pouring=False, caption=""):
     beam = """
     <div style="position:absolute;top:145px;left:49%;width:9px;
     height:75px;background:#f5d18d;border-radius:8px;z-index:8;"></div>
     """ if pouring else ""
+
+    colors = {
+        "raw": ("#f3d99c", "#d1b67d"),
+        "light": ("#f5d18a", "#d4a45b"),
+        "golden": ("#d38b39", "#88431e"),
+        "burnt": ("#5b301b", "#2a160e"),
+    }
+    base, grid = colors.get(waffle_class, colors["golden"])
 
     html = f"""
     <div style="position:relative;width:100%;max-width:430px;
@@ -139,12 +146,10 @@ def draw_machine(waffle_class="raw", pouring=False, caption=""):
       border:5px solid #151515;box-shadow:inset 0 0 0 5px #484848;z-index:3;">
         <div style="position:absolute;inset:7%;border-radius:50%;
         border:3px solid #e8b36b;
-        background-color:{'#f3d99c' if waffle_class == 'raw' else '#5b301b' if waffle_class == 'burnt' else '#d38b39'};
+        background-color:{base};
         background-image:
-        repeating-linear-gradient(0deg,transparent 0 17px,
-        {'#d1b67d' if waffle_class == 'raw' else '#2a160e' if waffle_class == 'burnt' else '#88431e'} 18px 24px),
-        repeating-linear-gradient(90deg,transparent 0 17px,
-        {'#d1b67d' if waffle_class == 'raw' else '#2a160e' if waffle_class == 'burnt' else '#88431e'} 18px 24px);
+        repeating-linear-gradient(0deg,transparent 0 17px,{grid} 18px 24px),
+        repeating-linear-gradient(90deg,transparent 0 17px,{grid} 18px 24px);
         box-shadow:inset 0 0 8px #4b281c;overflow:hidden;"></div>
       </div>
 
@@ -163,6 +168,7 @@ def draw_machine(waffle_class="raw", pouring=False, caption=""):
     st.markdown(dedent(html).strip(), unsafe_allow_html=True)
 
 
+# ==================== 점수 처리 ====================
 def end_game(success, message):
     st.session_state.game_over = True
     st.session_state.won = success
@@ -219,6 +225,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 c1, c2, c3 = st.columns(3)
+
 with c1:
     st.markdown(
         f'<div class="stat"><div class="stat-label">도전 횟수</div>'
@@ -244,20 +251,20 @@ with st.expander("📖 게임 방법"):
     2. 굽기 게이지 55~75% 사이에서 뒤집어요.
     3. 한 번이라도 실패하면 게임이 즉시 끝나요.
     4. 다섯 개를 모두 성공하면 와플을 토핑으로 꾸밀 수 있어요.
+    5. 토핑을 마우스로 끌어 와플 위에 놓아 보세요.
     """)
 
 
-# ==================== 게임 결과 및 토핑 꾸미기 ====================
+# ==================== 성공 후 토핑 꾸미기 ====================
 if st.session_state.game_over:
     st.markdown("---")
 
     if st.session_state.won:
         st.balloons()
         st.success(st.session_state.message)
-        st.markdown("## 🎉 나만의 와플 만들기")
-        st.write("토핑을 마우스로 끌어 와플 위에 놓아 보세요!")
+        st.markdown("## 🍓 나만의 와플 만들기")
+        st.write("아래 토핑을 마우스로 끌어 와플 위 원하는 위치에 놓으세요!")
 
-        # 토핑 꾸미기: iframe 내부에서 드래그 앤 드롭 처리
         topping_html = r"""
 <!DOCTYPE html>
 <html lang="ko">
@@ -272,205 +279,347 @@ body {
     background: transparent;
     color: #60391f;
 }
-h3 { text-align: center; margin: 5px 0 12px; color: #704326; }
-.help { text-align:center; font-size:13px; margin-bottom:12px; }
-.layout {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 15px;
-}
+h3 { text-align:center; margin:5px 0 12px; color:#704326; }
+.help { text-align:center; font-size:13px; margin-bottom:14px; line-height:1.6; }
+.layout { display:flex; flex-direction:column; align-items:center; gap:16px; }
+
 .waffle-area {
-    position: relative;
-    width: min(88vw, 390px);
-    aspect-ratio: 1 / 1;
-    border-radius: 50%;
-    border: 12px solid #9c5b2e;
-    background-color: #e5a34f;
+    position:relative;
+    width:min(88vw, 400px);
+    aspect-ratio:1/1;
+    border-radius:50%;
+    border:12px solid #9c5b2e;
+    background-color:#e5a34f;
     background-image:
-        repeating-linear-gradient(0deg, transparent 0 34px, #a95c2a 35px 43px),
-        repeating-linear-gradient(90deg, transparent 0 34px, #a95c2a 35px 43px),
-        linear-gradient(135deg, #ffdf94, #d78a35);
-    box-shadow: inset 0 0 0 6px #f4c779, 0 9px 0 #714126, 0 13px 22px #60391f44;
-    overflow: hidden;
-    touch-action: none;
+      repeating-linear-gradient(0deg,transparent 0 34px,#a95c2a 35px 43px),
+      repeating-linear-gradient(90deg,transparent 0 34px,#a95c2a 35px 43px),
+      linear-gradient(135deg,#ffdf94,#d78a35);
+    box-shadow:inset 0 0 0 6px #f4c779,0 9px 0 #714126,0 13px 22px #60391f44;
+    overflow:hidden;
+    touch-action:none;
 }
 .waffle-area:after {
-    content: "";
-    pointer-events: none;
-    position: absolute;
-    inset: 0;
-    border-radius: 50%;
-    box-shadow: inset 0 0 18px #8b481f55;
+    content:"";
+    position:absolute;
+    inset:0;
+    border-radius:50%;
+    pointer-events:none;
+    box-shadow:inset 0 0 18px #8b481f55;
 }
 .topping {
-    position: absolute;
-    z-index: 3;
-    transform: translate(-50%, -50%);
-    cursor: grab;
-    user-select: none;
-    touch-action: none;
-    line-height: 1;
-    filter: drop-shadow(0 2px 1px #5c321d44);
+    position:absolute;
+    z-index:3;
+    transform:translate(-50%,-50%);
+    cursor:grab;
+    user-select:none;
+    line-height:1;
+    filter:drop-shadow(0 2px 2px #5c321d44);
+    touch-action:none;
 }
-.topping:active { cursor: grabbing; }
+.topping:active { cursor:grabbing; }
+
+.cream-svg {
+    width:100%;
+    height:100%;
+    overflow:visible;
+    display:block;
+}
 .palette {
-    width: 100%;
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 9px;
+    width:100%;
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:10px;
 }
 .item {
-    background: #fff8e9;
-    border: 2px solid #e4c49a;
-    border-radius: 14px;
-    min-height: 75px;
-    padding: 8px 3px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 5px;
-    cursor: grab;
-    user-select: none;
-    touch-action: none;
-}
-.item:active { cursor: grabbing; background: #f4e1c3; }
-.item .emoji { font-size: 30px; }
-.item .name { font-size: 12px; font-weight: bold; }
-.controls {
+    background:#fff8e9;
+    border:2px solid #e4c49a;
+    border-radius:14px;
+    min-height:88px;
+    padding:8px 3px;
     display:flex;
+    flex-direction:column;
+    align-items:center;
     justify-content:center;
-    gap:10px;
-    flex-wrap:wrap;
-    width:100%;
+    gap:5px;
+    cursor:grab;
+    user-select:none;
+    touch-action:none;
 }
+.item:active { cursor:grabbing; background:#f4e1c3; }
+.item .emoji { font-size:39px; line-height:1.1; }
+.item .name { font-size:12px; font-weight:bold; }
+.item .cream-icon { width:50px; height:50px; }
+.controls { display:flex; justify-content:center; gap:10px; flex-wrap:wrap; width:100%; }
 button {
-    border: 0;
-    border-radius: 11px;
-    background: #87512f;
-    color: white;
-    padding: 11px 16px;
-    font-size: 14px;
+    border:0;
+    border-radius:11px;
+    background:#87512f;
+    color:white;
+    padding:12px 16px;
+    font-size:14px;
     cursor:pointer;
 }
 button:hover { background:#60371f; }
 #notice {
-    min-height: 20px;
-    text-align: center;
-    color: #80502d;
-    font-size: 13px;
+    min-height:20px;
+    text-align:center;
+    color:#80502d;
+    font-size:13px;
+}
+@media(max-width:360px) {
+    .item .emoji { font-size:33px; }
+    .item { min-height:78px; }
 }
 </style>
 </head>
 <body>
+
 <h3>🍓 토핑을 골라 와플 위에 올려 보세요!</h3>
-<div class="help">토핑을 누른 채로 끌어 와플 위 원하는 곳에 놓으세요.</div>
+<div class="help">토핑을 누른 채로 끌어 와플 위 원하는 곳에 놓으세요.<br>
+올린 토핑은 다시 끌어서 위치를 바꿀 수 있어요.</div>
+
+<!-- SVG 휘핑크림 모양 정의 -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+<defs>
+<linearGradient id="creamGrad" x1="0" y1="0" x2="1" y2="1">
+  <stop offset="0%" stop-color="#fffef7"/>
+  <stop offset="48%" stop-color="#f8f5e8"/>
+  <stop offset="78%" stop-color="#e9e4d2"/>
+  <stop offset="100%" stop-color="#d5d0bd"/>
+</linearGradient>
+<linearGradient id="creamHighlight" x1="0" y1="0" x2="1" y2="0">
+  <stop offset="0%" stop-color="#fffefa"/>
+  <stop offset="55%" stop-color="#fffdf3"/>
+  <stop offset="100%" stop-color="#e9e4d4"/>
+</linearGradient>
+<symbol id="creamShape" viewBox="0 0 100 100">
+  <path d="M49 5
+    C44 14 33 19 25 29
+    C16 38 15 48 23 54
+    C10 65 19 78 32 83
+    C43 91 68 92 80 80
+    C90 70 84 60 77 55
+    C88 45 77 38 66 32
+    C77 22 63 18 55 11
+    C52 8 50 6 49 5Z"
+    fill="url(#creamGrad)"/>
+
+  <path d="M49 6
+    C43 19 48 26 59 32
+    C47 30 31 34 27 44
+    C22 56 39 60 58 62
+    C40 62 24 67 31 77
+    C39 87 65 86 76 76
+    C83 68 70 61 56 57
+    C73 59 82 51 73 44
+    C66 38 55 35 50 29
+    C45 22 47 13 49 6Z"
+    fill="url(#creamHighlight)"/>
+
+  <path d="M49 8
+    C40 23 47 30 57 35
+    M30 42 C24 53 39 56 52 58
+    M31 69 C42 77 63 76 74 70
+    M39 82 C51 87 67 82 76 76"
+    fill="none" stroke="#e6e0cd" stroke-width="2.3"
+    stroke-linecap="round"/>
+
+  <path d="M49 6
+    C45 18 51 25 60 30"
+    fill="none" stroke="#fff" stroke-width="2.5"
+    stroke-linecap="round"/>
+</symbol>
+</defs>
+</svg>
 
 <div class="layout">
-    <div class="waffle-area" id="waffle" aria-label="토핑을 놓는 와플"></div>
+  <div class="waffle-area" id="waffle" aria-label="토핑을 놓는 와플"></div>
 
-    <div class="palette" id="palette">
-        <div class="item" data-emoji="🍓" data-size="32">
-            <span class="emoji">🍓</span><span class="name">딸기</span>
-        </div>
-        <div class="item" data-emoji="🍌" data-size="34">
-            <span class="emoji">🍌</span><span class="name">바나나</span>
-        </div>
-        <div class="item" data-emoji="🥝" data-size="32">
-            <span class="emoji">🥝</span><span class="name">키위</span>
-        </div>
-        <div class="item" data-emoji="🫐" data-size="32">
-            <span class="emoji">🫐</span><span class="name">블루베리</span>
-        </div>
-        <div class="item" data-emoji="🍒" data-size="31">
-            <span class="emoji">🍒</span><span class="name">체리</span>
-        </div>
-        <div class="item" data-emoji="🍑" data-size="32">
-            <span class="emoji">🍑</span><span class="name">복숭아</span>
-        </div>
-        <div class="item" data-emoji="🍍" data-size="31">
-            <span class="emoji">🍍</span><span class="name">파인애플</span>
-        </div>
-        <div class="item" data-emoji="🍫" data-size="30">
-            <span class="emoji">🍫</span><span class="name">초콜릿</span>
-        </div>
-        <div class="item" data-emoji="🍦" data-size="37">
-            <span class="emoji">🍦</span><span class="name">휘핑크림</span>
-        </div>
+  <div class="palette" id="palette">
+    <div class="item" data-kind="emoji" data-value="🍓" data-size="46">
+      <span class="emoji">🍓</span><span class="name">딸기</span>
     </div>
+    <div class="item" data-kind="emoji" data-value="🍌" data-size="47">
+      <span class="emoji">🍌</span><span class="name">바나나</span>
+    </div>
+    <div class="item" data-kind="emoji" data-value="🥝" data-size="45">
+      <span class="emoji">🥝</span><span class="name">키위</span>
+    </div>
+    <div class="item" data-kind="emoji" data-value="🫐" data-size="45">
+      <span class="emoji">🫐</span><span class="name">블루베리</span>
+    </div>
+    <div class="item" data-kind="emoji" data-value="🍒" data-size="44">
+      <span class="emoji">🍒</span><span class="name">체리</span>
+    </div>
+    <div class="item" data-kind="emoji" data-value="🍑" data-size="45">
+      <span class="emoji">🍑</span><span class="name">복숭아</span>
+    </div>
+    <div class="item" data-kind="emoji" data-value="🍍" data-size="44">
+      <span class="emoji">🍍</span><span class="name">파인애플</span>
+    </div>
+    <div class="item" data-kind="emoji" data-value="🍫" data-size="43">
+      <span class="emoji">🍫</span><span class="name">초콜릿</span>
+    </div>
+    <div class="item" data-kind="cream" data-value="cream" data-size="76">
+      <svg class="cream-icon" viewBox="0 0 100 100">
+        <use href="#creamShape"></use>
+      </svg>
+      <span class="name">휘핑크림</span>
+    </div>
+  </div>
 
-    <div id="notice">토핑을 여러 개 놓아 나만의 와플을 완성하세요.</div>
-    <div class="controls">
-        <button id="undo">마지막 토핑 지우기</button>
-        <button id="clear">토핑 전부 지우기</button>
-    </div>
+  <div id="notice">토핑을 여러 개 놓아 나만의 와플을 완성하세요.</div>
+  <div class="controls">
+    <button id="undo">마지막 토핑 지우기</button>
+    <button id="clear">토핑 전부 지우기</button>
+  </div>
 </div>
 
 <script>
 const waffle = document.getElementById("waffle");
 const notice = document.getElementById("notice");
-let toppings = [];
-let dragging = null;
+const toppings = [];
 let nextId = 1;
+let activeDrag = null;
 
-function addTopping(emoji, size, x, y) {
+function createCreamSVG() {
+    const svgNS = "http://www.w3.org/2000/svg";
+    const svg = document.createElementNS(svgNS, "svg");
+    svg.setAttribute("viewBox", "0 0 100 100");
+    svg.setAttribute("class", "cream-svg");
+
+    const defs = document.createElementNS(svgNS, "defs");
+    const gradient = document.createElementNS(svgNS, "linearGradient");
+    gradient.setAttribute("id", "cg" + nextId);
+    gradient.setAttribute("x1", "0");
+    gradient.setAttribute("y1", "0");
+    gradient.setAttribute("x2", "1");
+    gradient.setAttribute("y2", "1");
+
+    [
+        ["0%", "#fffef7"],
+        ["48%", "#f8f5e8"],
+        ["78%", "#e9e4d2"],
+        ["100%", "#d5d0bd"]
+    ].forEach(([offset, color]) => {
+        const stop = document.createElementNS(svgNS, "stop");
+        stop.setAttribute("offset", offset);
+        stop.setAttribute("stop-color", color);
+        gradient.appendChild(stop);
+    });
+
+    defs.appendChild(gradient);
+    svg.appendChild(defs);
+
+    const paths = [
+        {
+            d: "M49 5 C44 14 33 19 25 29 C16 38 15 48 23 54 C10 65 19 78 32 83 C43 91 68 92 80 80 C90 70 84 60 77 55 C88 45 77 38 66 32 C77 22 63 18 55 11 C52 8 50 6 49 5Z",
+            fill: "url(#cg" + nextId + ")"
+        },
+        {
+            d: "M49 6 C43 19 48 26 59 32 C47 30 31 34 27 44 C22 56 39 60 58 62 C40 62 24 67 31 77 C39 87 65 86 76 76 C83 68 70 61 56 57 C73 59 82 51 73 44 C66 38 55 35 50 29 C45 22 47 13 49 6Z",
+            fill: "#fffdf3"
+        }
+    ];
+
+    paths.forEach(p => {
+        const path = document.createElementNS(svgNS, "path");
+        path.setAttribute("d", p.d);
+        path.setAttribute("fill", p.fill);
+        svg.appendChild(path);
+    });
+
+    [
+        "M49 8 C40 23 47 30 57 35",
+        "M30 42 C24 53 39 56 52 58",
+        "M31 69 C42 77 63 76 74 70",
+        "M39 82 C51 87 67 82 76 76"
+    ].forEach(d => {
+        const path = document.createElementNS(svgNS, "path");
+        path.setAttribute("d", d);
+        path.setAttribute("fill", "none");
+        path.setAttribute("stroke", "#e6e0cd");
+        path.setAttribute("stroke-width", "2.3");
+        path.setAttribute("stroke-linecap", "round");
+        svg.appendChild(path);
+    });
+
+    nextId++;
+    return svg;
+}
+
+function clampToWaffle(clientX, clientY) {
+    const rect = waffle.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    const radius = rect.width * 0.41;
+
+    let dx = clientX - cx;
+    let dy = clientY - cy;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+
+    if (dist > radius) {
+        dx = dx * radius / dist;
+        dy = dy * radius / dist;
+    }
+
+    return {
+        x: (cx + dx - rect.left) / rect.width * 100,
+        y: (cy + dy - rect.top) / rect.height * 100
+    };
+}
+
+function addTopping(kind, value, size, x, y) {
     const el = document.createElement("div");
     el.className = "topping";
-    el.textContent = emoji;
-    el.style.fontSize = size + "px";
     el.dataset.id = String(nextId++);
+
+    if (kind === "cream") {
+        el.style.width = size + "px";
+        el.style.height = size + "px";
+        el.appendChild(createCreamSVG());
+    } else {
+        el.textContent = value;
+        el.style.fontSize = size + "px";
+    }
+
     el.style.left = x + "%";
     el.style.top = y + "%";
     waffle.appendChild(el);
 
-    const obj = {el, emoji, size, x, y};
+    const obj = {el, kind, value, size, x, y};
     toppings.push(obj);
     makeMovable(obj);
-    notice.textContent = emoji + " 토핑을 올렸어요!";
+
+    notice.textContent = kind === "cream"
+        ? "휘핑크림을 올렸어요!"
+        : value + " 토핑을 올렸어요!";
 }
 
 function makeMovable(obj) {
     obj.el.addEventListener("pointerdown", function(e) {
         e.preventDefault();
-        dragging = {
-            obj: obj,
-            pointerId: e.pointerId
-        };
+        e.stopPropagation();
+
+        activeDrag = obj;
         obj.el.setPointerCapture(e.pointerId);
-        obj.el.style.zIndex = 10;
+        obj.el.style.zIndex = 20;
     });
 
     obj.el.addEventListener("pointermove", function(e) {
-        if (!dragging || dragging.obj !== obj) return;
+        if (activeDrag !== obj) return;
         e.preventDefault();
 
-        const rect = waffle.getBoundingClientRect();
-        const cx = e.clientX - rect.left;
-        const cy = e.clientY - rect.top;
-
-        // 와플 원형 영역 안에 토핑을 유지
-        const centerX = rect.width / 2;
-        const centerY = rect.height / 2;
-        const radius = rect.width * 0.43;
-        let dx = cx - centerX;
-        let dy = cy - centerY;
-        const distance = Math.sqrt(dx * dx + dy * dy);
-
-        if (distance > radius) {
-            dx = dx * radius / distance;
-            dy = dy * radius / distance;
-        }
-
-        obj.x = (centerX + dx) / rect.width * 100;
-        obj.y = (centerY + dy) / rect.height * 100;
+        const pos = clampToWaffle(e.clientX, e.clientY);
+        obj.x = pos.x;
+        obj.y = pos.y;
         obj.el.style.left = obj.x + "%";
         obj.el.style.top = obj.y + "%";
     });
 
-    function release(e) {
-        if (dragging && dragging.obj === obj) {
-            dragging = null;
+    function release() {
+        if (activeDrag === obj) {
+            activeDrag = null;
             obj.el.style.zIndex = 3;
         }
     }
@@ -479,54 +628,59 @@ function makeMovable(obj) {
     obj.el.addEventListener("pointercancel", release);
 }
 
-function palettePointerDown(e, item) {
-    e.preventDefault();
-    const emoji = item.dataset.emoji;
-    const size = Number(item.dataset.size);
-    const rect = waffle.getBoundingClientRect();
-
-    const ghost = document.createElement("div");
-    ghost.textContent = emoji;
-    ghost.style.cssText =
-        "position:fixed;z-index:9999;pointer-events:none;" +
-        "font-size:" + size + "px;left:" + e.clientX + "px;top:" + e.clientY + "px;";
-    document.body.appendChild(ghost);
-
-    function move(ev) {
-        ghost.style.left = ev.clientX + "px";
-        ghost.style.top = ev.clientY + "px";
-    }
-
-    function up(ev) {
-        document.removeEventListener("pointermove", move);
-        document.removeEventListener("pointerup", up);
-        ghost.remove();
-
-        const r = waffle.getBoundingClientRect();
-        const x = ev.clientX - r.left;
-        const y = ev.clientY - r.top;
-        const cx = r.width / 2;
-        const cy = r.height / 2;
-        const radius = r.width * 0.43;
-        const dist = Math.sqrt((x-cx)*(x-cx) + (y-cy)*(y-cy));
-
-        if (x >= 0 && y >= 0 && x <= r.width && y <= r.height && dist <= radius) {
-            addTopping(
-                emoji, size,
-                x / r.width * 100,
-                y / r.height * 100
-            );
-        } else {
-            notice.textContent = "토핑을 와플 위에 놓아 주세요.";
-        }
-    }
-
-    document.addEventListener("pointermove", move);
-    document.addEventListener("pointerup", up);
-}
-
 document.querySelectorAll(".item").forEach(item => {
-    item.addEventListener("pointerdown", e => palettePointerDown(e, item));
+    item.addEventListener("pointerdown", e => {
+        e.preventDefault();
+
+        const kind = item.dataset.kind;
+        const value = item.dataset.value;
+        const size = Number(item.dataset.size);
+
+        const ghost = document.createElement("div");
+        ghost.style.cssText =
+            "position:fixed;z-index:9999;pointer-events:none;" +
+            "left:" + e.clientX + "px;top:" + e.clientY + "px;" +
+            "transform:translate(-50%,-50%);";
+
+        if (kind === "cream") {
+            ghost.style.width = size + "px";
+            ghost.style.height = size + "px";
+            ghost.appendChild(createCreamSVG());
+        } else {
+            ghost.textContent = value;
+            ghost.style.fontSize = size + "px";
+        }
+
+        document.body.appendChild(ghost);
+
+        function move(ev) {
+            ghost.style.left = ev.clientX + "px";
+            ghost.style.top = ev.clientY + "px";
+        }
+
+        function up(ev) {
+            document.removeEventListener("pointermove", move);
+            document.removeEventListener("pointerup", up);
+            ghost.remove();
+
+            const rect = waffle.getBoundingClientRect();
+            const inside =
+                ev.clientX >= rect.left &&
+                ev.clientX <= rect.right &&
+                ev.clientY >= rect.top &&
+                ev.clientY <= rect.bottom;
+
+            if (inside) {
+                const pos = clampToWaffle(ev.clientX, ev.clientY);
+                addTopping(kind, value, size, pos.x, pos.y);
+            } else {
+                notice.textContent = "토핑을 와플 위에 놓아 주세요.";
+            }
+        }
+
+        document.addEventListener("pointermove", move);
+        document.addEventListener("pointerup", up);
+    });
 });
 
 document.getElementById("undo").addEventListener("click", () => {
@@ -539,14 +693,14 @@ document.getElementById("undo").addEventListener("click", () => {
 
 document.getElementById("clear").addEventListener("click", () => {
     toppings.forEach(t => t.el.remove());
-    toppings = [];
+    toppings.length = 0;
     notice.textContent = "토핑을 모두 지웠어요.";
 });
 </script>
 </body>
 </html>
 """
-        components.html(topping_html, height=880, scrolling=False)
+        components.html(topping_html, height=940, scrolling=False)
 
         st.markdown(
             f"**최종 점수: {st.session_state.score}점**  ·  "
@@ -558,11 +712,8 @@ document.getElementById("clear").addEventListener("click", () => {
         st.markdown("### 다음 도전에서 다시 만들어 봐요!")
 
         st.markdown(
-            f'<div style="background:#fffaf0;border:2px solid #e2c49a;'
-            f'border-radius:18px;padding:18px;text-align:center;">'
-            f'<div>최종 점수</div>'
-            f'<div style="font-size:2.5rem;font-weight:bold;color:#87512f;">'
-            f'{st.session_state.score}점</div></div>',
+            f'<div class="stat"><div>최종 점수</div>'
+            f'<div class="stat-value">{st.session_state.score}점</div></div>',
             unsafe_allow_html=True
         )
 
@@ -571,8 +722,9 @@ document.getElementById("clear").addEventListener("click", () => {
             for result in st.session_state.results:
                 st.write(result)
 
-    # 꾸미기 영역 아래쪽에 배치해 와플을 가리지 않음
+    # 꾸미기 화면 아래에 배치해 와플을 가리지 않음
     st.markdown("<br>", unsafe_allow_html=True)
+
     if st.button("🔄 다시 하기", use_container_width=True):
         init_game()
         st.rerun()
@@ -583,7 +735,7 @@ elif st.session_state.phase == "pour_ready":
     st.markdown(f"## 🥣 {st.session_state.round_no}번째 와플")
     st.info("열린 와플 기계에 반죽을 부을 준비를 해 주세요.")
 
-    draw_machine(caption="반죽을 부을 준비!")
+    draw_machine("raw", caption="반죽을 부을 준비!")
 
     if st.button("🥣 반죽 붓기 시작", use_container_width=True):
         st.session_state.phase = "pouring"
@@ -591,7 +743,7 @@ elif st.session_state.phase == "pour_ready":
         st.rerun()
 
 
-# ==================== 반죽 붓기 게이지 ====================
+# ==================== 반죽 붓기 ====================
 elif st.session_state.phase == "pouring":
 
     @st.fragment(run_every=0.15)
@@ -609,12 +761,7 @@ elif st.session_state.phase == "pouring":
             int(elapsed / st.session_state.pour_duration * 100)
         )
 
-        draw_machine(
-            waffle_class="raw",
-            pouring=True,
-            caption="반죽이 틀에 채워지는 중..."
-        )
-
+        draw_machine("raw", pouring=True, caption="반죽이 틀에 채워지는 중...")
         st.markdown(
             f'<h3 style="text-align:center;">반죽 양: {amount}%</h3>',
             unsafe_allow_html=True
@@ -642,8 +789,7 @@ elif st.session_state.phase == "pouring":
                 )
                 end_game(
                     False,
-                    f"반죽 양이 {amount}%예요. "
-                    "성공 범위인 40~60%를 벗어났어요!"
+                    f"반죽 양이 {amount}%예요. 성공 범위인 40~60%를 벗어났어요!"
                 )
             else:
                 st.session_state.phase = "bake"
@@ -670,9 +816,7 @@ elif st.session_state.phase == "bake":
         if st.session_state.phase != "bake":
             return
 
-        st.markdown(
-            f"## 🔥 {st.session_state.round_no}번째 와플: 굽기"
-        )
+        st.markdown(f"## 🔥 {st.session_state.round_no}번째 와플: 굽기")
 
         elapsed = time.time() - st.session_state.bake_start
         progress = min(
@@ -697,11 +841,7 @@ elif st.session_state.phase == "bake":
             status = "타기 직전이에요!"
             color = "#b94c2c"
 
-        draw_machine(
-            waffle_class=waffle_class,
-            caption="와플이 익고 있어요..."
-        )
-
+        draw_machine(waffle_class, caption="와플이 익고 있어요...")
         st.markdown(
             f'<h3 style="text-align:center;color:{color};">'
             f'{status} · {progress}%</h3>',
@@ -709,11 +849,8 @@ elif st.session_state.phase == "bake":
         )
         st.progress(progress / 100)
 
-        if st.button(
-            "🔄 지금 뒤집기!",
-            key="flip_waffle",
-            use_container_width=True
-        ):
+        if st.button("🔄 지금 뒤집기!", key="flip_waffle",
+                     use_container_width=True):
             finish_waffle(progress)
             st.rerun()
 
